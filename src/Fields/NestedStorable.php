@@ -64,7 +64,7 @@ trait NestedStorable
      *
      * @return array<string, string>
      */
-    public function getValidationAttributeNames(NovaRequest $request)
+    public function getValidationAttributeNames(NovaRequest $request): array
     {
         $resourceClass = $this->resourceClass;
         $resource = new $resourceClass($resourceClass::newModel());
@@ -102,7 +102,7 @@ trait NestedStorable
      *
      * @return array<string, array<int, string|\Illuminate\Validation\Rule|\Illuminate\Contracts\Validation\Rule|callable>>
      */
-    public function getCreationRules(NovaRequest $request)
+    public function getCreationRules(NovaRequest $request): array
     {
         return array_merge_recursive(parent::getCreationRules($request), $this->getAvailableValidationRules($request));
     }
@@ -112,7 +112,7 @@ trait NestedStorable
      *
      * @return array<string, array<int, string|\Illuminate\Validation\Rule|\Illuminate\Contracts\Validation\Rule|callable>>
      */
-    public function getUpdateRules(NovaRequest $request)
+    public function getUpdateRules(NovaRequest $request): array
     {
         return array_merge_recursive(parent::getUpdateRules($request), $this->getAvailableValidationRules($request));
     }
