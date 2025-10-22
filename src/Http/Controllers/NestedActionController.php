@@ -40,7 +40,7 @@ class NestedActionController extends Controller
     {
         $request->validateFields();
 
-        return $request->action()->handleRequest($request);
+        return $request->nestedAction()->handleRequest($request);
     }
 
     /**

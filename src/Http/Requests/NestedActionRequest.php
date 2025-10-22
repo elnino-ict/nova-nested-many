@@ -33,7 +33,9 @@ class NestedActionRequest extends ActionRequest implements NestedResourceRequest
             }
             return new Nested($this->nestedRelationsShipModels[$relationName], [], true);
         }
-        return new Nested($this->model(), [], true);
+        /** @var \Lupennat\NestedMany\Models\Contracts\Nestable $model */
+        $model = $this->model();
+        return new Nested($model, [], true);
     }
 
     protected function getModel($request, $resourceClass, $child)
@@ -64,11 +66,11 @@ class NestedActionRequest extends ActionRequest implements NestedResourceRequest
     }
 
     /**
-     * Get the action instance specified by the request.
+     * Get the nested action instance specified by the request.
      *
      * @return \Lupennat\NestedMany\Actions\NestedBaseAction
      */
-    public function action()
+    public function nestedAction()
     {
         return once(function () {
             $hasResources = !empty($this->nestedResources);
@@ -87,7 +89,7 @@ class NestedActionRequest extends ActionRequest implements NestedResourceRequest
      *
      * @return \Illuminate\Support\Collection
      */
-    protected function resolveActions()
+    protected function resolveActions(): \Illuminate\Support\Collection
     {
         return $this->newResource()->resolveNestedActions($this)
             ->merge([

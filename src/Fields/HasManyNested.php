@@ -100,10 +100,20 @@ class HasManyNested extends Nested
      */
     public function authorize(Request $request)
     {
-        return call_user_func(
-            [$this->resourceClass, 'authorizedToViewAny'],
-            $request
-        ) && parent::authorize($request);
+        // Avoid triggering authorization exceptions on construction and during global search
+        try {
+            if ($request instanceof \Laravel\Nova\Http\Requests\GlobalSearchRequest) {
+                return false;
+            }
+
+            return call_user_func([
+                $this->resourceClass,
+                'authorizedToViewAny',
+            ], $request) && parent::authorize($request);
+        } catch (\Throwable $e) {
+            // Fail closed without throwing 403/Authorization exceptions
+            return false;
+        }
     }
 
     /**
@@ -114,7 +124,7 @@ class HasManyNested extends Nested
      *
      * @return void
      */
-    public function resolve($resource, $attribute = null)
+    public function resolve($resource, ?string $attribute = null): void
     {
     }
 

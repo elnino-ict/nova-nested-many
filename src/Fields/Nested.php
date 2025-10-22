@@ -251,8 +251,17 @@ abstract class Nested extends Field implements BehavesAsPanel, RelatableField
      */
     protected function authorizedToRelate(Request $request): bool
     {
-        return $request->findResource()->authorizedToAdd($request, $this->resourceClass::newModel())
-            && $this->resourceClass::authorizedToCreateNested($request);
+        // Prevent authorization checks from throwing during field serialization
+        try {
+            if ($request instanceof \Laravel\Nova\Http\Requests\GlobalSearchRequest) {
+                return false;
+            }
+
+            return $request->findResource()->authorizedToAdd($request, $this->resourceClass::newModel())
+                && $this->resourceClass::authorizedToCreateNested($request);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**
