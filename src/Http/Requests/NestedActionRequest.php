@@ -3,11 +3,13 @@
 namespace Lupennat\NestedMany\Http\Requests;
 
 use Exception;
+use Laravel\Nova\Fields\ActionFields;
+use Laravel\Nova\Fields\FieldCollection;
 use Laravel\Nova\Http\Requests\ActionRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Support\Fluent;
 use Lupennat\NestedMany\Models\Nested;
 use Lupennat\NestedMany\NestedChildrenHelper;
-
 class NestedActionRequest extends ActionRequest implements NestedResourceRequest
 {
     use ChildrenResources {
@@ -81,6 +83,39 @@ class NestedActionRequest extends ActionRequest implements NestedResourceRequest
                 })->first(function ($action) {
                     return $action->uriKey() == $this->query('action');
                 }) ?: abort($this->actionExists() ? 403 : 404);
+        });
+    }
+
+    /**
+     * Override Nova's ActionRequest::validateFields() to avoid calling $this->action(),
+     * which is strictly typed to return Laravel\Nova\Actions\Action.
+     */
+    public function validateFields(): void
+    {
+        $this->nestedAction()->validateFields($this);
+    }
+
+    /**
+     * Override Nova's ActionRequest::resolveFields() to avoid calling $this->action().
+     */
+    public function resolveFields(): ActionFields
+    {
+        return once(function () {
+            $fields = new Fluent;
+
+            $results = (new FieldCollection($this->nestedAction()->fields($this)))
+                ->authorized($this)
+                ->applyDependsOn($this)
+                ->withoutReadonly($this)
+                ->withoutUnfillable()
+                ->mapWithKeys(fn ($field) => [
+                    $field->attribute => $field->fillForAction($this, $fields),
+                ]);
+
+            return new ActionFields(
+                collect($fields->getAttributes()),
+                $results->filter(static fn ($field) => \is_callable($field))
+            );
         });
     }
 
